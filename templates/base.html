@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Планировщик задач{% endblock %}</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    {% if user %}
+    {% set _name = (user.full_name or user.username) %}
+    {% set _parts = _name.split(' ') %}
+    {% set _short = _parts[0] + (' ' + _parts[1][0] + '.' if _parts|length > 1 else '') %}
+    <header class="topbar">
+        <div class="topbar-inner">
+            <a class="logo" href="/" aria-label="Планировщик задач">
+                <span class="logo-mark">
+                    <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" fill="none">
+                        <rect x="3" y="5" width="22" height="25" rx="3" fill="#fff" stroke="#1F2233" stroke-width="1.5"/>
+                        <rect x="10" y="2.5" width="8" height="5" rx="1.5" fill="#1F2233"/>
+                        <path d="M11 17 L14.5 20.5 L22 12.5" stroke="#6366F1" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </span>
+                <span class="logo-text">Планировщик задач</span>
+            </a>
+            <nav class="topnav">
+                <a href="/" class="{% if active_page == 'dashboard' %}active{% endif %}">Мои задачи</a>
+                <a href="/projects" class="{% if active_page == 'projects' %}active{% endif %}">Проекты</a>
+                <a href="/notifications" class="{% if active_page == 'notifications' %}active{% endif %}">Уведомления{% if notif_count and notif_count > 0 %} <span class="nav-badge">{{ notif_count }}</span>{% endif %}</a>
+            </nav>
+            <div class="topbar-right">
+                <span class="user-chip" title="{{ user.email }}">
+                    <span class="avatar">{{ _name[0]|upper }}</span>
+                    <span class="user-name">{{ _short }}</span>
+                </span>
+                <a class="logout-link" href="/logout">Выйти</a>
+            </div>
+        </div>
+    </header>
+
+    <nav class="bottom-tabbar">
+        <div class="bottom-tabbar-inner">
+            <a href="/" class="{% if active_page == 'dashboard' %}active{% endif %}">
+                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                Задачи
+            </a>
+            <a href="/projects" class="{% if active_page == 'projects' %}active{% endif %}">
+                <svg viewBox="0 0 24 24"><path d="M3 7h18v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                Проекты
+            </a>
+            <a href="/notifications" class="{% if active_page == 'notifications' %}active{% endif %}">
+                <svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21a2 2 0 0 0 4 0"/></svg>
+                Алерты
+            </a>
+            <a href="#" data-open-modal="new-task">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
+                Новая
+            </a>
+        </div>
+    </nav>
+    {% endif %}
+
+    <main class="page">
+        {% block content %}{% endblock %}
+    </main>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
