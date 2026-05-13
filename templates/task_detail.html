@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}{{ task.title }} — Планировщик задач{% endblock %}
+{% block content %}
+<section class="container">
+    <a class="back-link" href="/">← Назад к задачам</a>
+
+    <div class="task-detail-grid">
+        <div class="task-detail-main">
+            <div class="task-detail-head">
+                <h1 class="task-detail-title">{{ task.title }}</h1>
+                <div class="task-detail-chips">
+                    {% if task.status.value == 'todo' %}<span class="chip chip-status-todo">К выполнению</span>
+                    {% elif task.status.value == 'in_progress' %}<span class="chip chip-status-progress">В работе</span>
+                    {% else %}<span class="chip chip-status-done">Выполнено</span>{% endif %}
+                    {% if task.priority.value == 'high' %}<span class="chip prio-high">Высокий</span>
+                    {% elif task.priority.value == 'medium' %}<span class="chip prio-medium">Средний</span>
+                    {% else %}<span class="chip prio-low">Низкий</span>{% endif %}
+                    {% if task.due_date %}<span class="chip chip-due">📅 До {{ task.due_date.strftime('%d.%m.%Y') }}</span>{% endif %}
+                </div>
+                {% if task.owner %}<p class="task-detail-meta">Создал: {{ task.owner.full_name or task.owner.username }} · {{ task.created_at.strftime('%d.%m.%Y') }}</p>{% endif %}
+            </div>
+
+            <form class="card" action="/tasks/{{ task.id }}/update" method="post">
+                <h3 class="card-title">Описание</h3>
+                <textarea class="task-desc-input" name="description">{{ task.description or '' }}</textarea>
+                <input type="hidden" name="title" value="{{ task.title }}">
+                <div class="form-grid">
+                    <div class="form-field"><label>Проект</label>
+                        <select name="project_id">
+                            <option value="">— без проекта —</option>
+                            {% for p in projects %}<option value="{{ p.id }}" {% if task.project_id == p.id %}selected{% endif %}>{{ p.name }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-field"><label>Исполнитель</label>
+                        <select name="assignee_id">
+                            <option value="">— не назначен —</option>
+                            {% for u in users %}<option value="{{ u.id }}" {% if task.assignee_id == u.id %}selected{% endif %}>{{ u.full_name or u.username }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-field"><label>Приоритет</label>
+                        <select name="priority">
+                            <option value="low" {% if task.priority.value == 'low' %}selected{% endif %}>Низкий</option>
+                            <option value="medium" {% if task.priority.value == 'medium' %}selected{% endif %}>Средний</option>
+                            <option value="high" {% if task.priority.value == 'high' %}selected{% endif %}>Высокий</option>
+                        </select>
+                    </div>
+                    <div class="form-field"><label>Дедлайн</label>
+                        <input type="date" name="due_date" value="{{ task.due_date.isoformat() if task.due_date else '' }}">
+                    </div>
+                </div>
+                <input type="hidden" name="status" value="{{ task.status.value }}">
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                    {% if task.owner_id == user.id %}
+                    <button type="submit" class="link-danger" formaction="/tasks/{{ task.id }}/delete" formmethod="post" onclick="return confirm('Удалить задачу?')">Удалить</button>
+                    {% endif %}
+                </div>
+            </form>
+
+            <div class="card">
+                <h3 class="card-title">Комментарии <span class="card-title-count">{{ task.comments|length }}</span></h3>
+                <div class="comments-list">
+                    {% for c in task.comments|sort(attribute='created_at') %}
+                        {% set au = (c.author.username if c.author else 'user')|lower %}
+                        {% set grad = '#10B981, #059669' if au.startswith('s') or au.startswith('sh') else ('#F59E0B, #D97706' if au.startswith('a') else '#6366F1, #8B5CF6') %}
+                        <div class="comment-item">
+                            <span class="comment-avatar" style="background: linear-gradient(135deg, {{ grad }});">{{ ((c.author.full_name or c.author.username)[0] if c.author else '?')|upper }}</span>
+                            <div class="comment-body">
+                                <div class="comment-head">
+                                    <span class="comment-author">{% if c.author %}{{ c.author.full_name or c.author.username }}{% else %}Неизвестно{% endif %}</span>
+                                    <span class="comment-date">{{ c.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
+                                </div>
+                                <p class="comment-text">{{ c.text }}</p>
+                            </div>
+                        </div>
+                    {% else %}
+                        <p class="muted small">Комментариев пока нет.</p>
+                    {% endfor %}
+                </div>
+                <form class="comment-input-row" action="/tasks/{{ task.id }}/comments" method="post">
+                    <input class="comment-input" type="text" name="text" placeholder="Напиши комментарий..." required>
+                    <button type="submit" class="btn btn-primary btn-sm">Отправить</button>
+                </form>
+            </div>
+        </div>
+
+        <aside class="task-sidebar">
+            <h3 class="sidebar-title">О задаче</h3>
+            <div class="sidebar-row"><span class="sidebar-row-label">Статус</span><span class="sidebar-row-value">{% if task.status.value == 'todo' %}К выполнению{% elif task.status.value == 'in_progress' %}В работе{% else %}Выполнено{% endif %}</span></div>
+            <div class="sidebar-row"><span class="sidebar-row-label">Приоритет</span><span class="sidebar-row-value">{% if task.priority.value == 'high' %}Высокий{% elif task.priority.value == 'medium' %}Средний{% else %}Низкий{% endif %}</span></div>
+            {% if task.project %}<div class="sidebar-row"><span class="sidebar-row-label">Проект</span><span class="sidebar-row-value">{{ task.project.name }}</span></div>{% endif %}
+            {% if task.owner %}<div class="sidebar-row"><span class="sidebar-row-label">Создатель</span><span class="sidebar-row-value">{{ task.owner.full_name or task.owner.username }}</span></div>{% endif %}
+            {% if task.assignee %}<div class="sidebar-row"><span class="sidebar-row-label">Исполнитель</span><span class="sidebar-row-value">{{ task.assignee.full_name or task.assignee.username }}</span></div>{% endif %}
+            <div class="sidebar-row"><span class="sidebar-row-label">Создана</span><span class="sidebar-row-value">{{ task.created_at.strftime('%d.%m.%Y') }}</span></div>
+            {% if task.due_date %}<div class="sidebar-row"><span class="sidebar-row-label">Дедлайн</span><span class="sidebar-row-value">{{ task.due_date.strftime('%d.%m.%Y') }}</span></div>{% endif %}
+            <div class="sidebar-row"><span class="sidebar-row-label">Изменена</span><span class="sidebar-row-value">{{ task.updated_at.strftime('%d.%m.%Y %H:%M') }}</span></div>
+        </aside>
+    </div>
+</section>
+{% endblock %}
