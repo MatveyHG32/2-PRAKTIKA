@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Уведомления — Планировщик задач{% endblock %}
+{% block content %}
+<section class="container">
+    <div class="page-head">
+        <div>
+            <h1>Уведомления</h1>
+            <p class="muted">Сроки, новые задачи и комментарии — всё важное в одном месте.</p>
+        </div>
+        <button class="btn btn-primary" data-open-modal="new-task">+ Новая задача</button>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card stat-overdue"><div class="stat-label">Просрочено</div><div class="stat-value">{{ notif_stats.overdue }}</div></div>
+        <div class="stat-card stat-todo"><div class="stat-label">Сегодня</div><div class="stat-value">{{ notif_stats.today }}</div></div>
+        <div class="stat-card stat-progress"><div class="stat-label">Скоро</div><div class="stat-value">{{ notif_stats.soon }}</div></div>
+        <div class="stat-card stat-done"><div class="stat-label">Назначено мне</div><div class="stat-value">{{ notif_stats.assigned }}</div></div>
+        <div class="stat-card stat-comments"><div class="stat-label">Комментарии</div><div class="stat-value">{{ notif_stats.comments }}</div></div>
+    </div>
+
+    {% if overdue_tasks %}
+    <section class="notif-section">
+        <div class="notif-section-head"><h2 class="notif-section-title">Просрочено</h2><span class="notif-section-count">{{ overdue_tasks|length }}</span></div>
+        {% for t in overdue_tasks %}
+            <a class="notif-card tone-danger" href="/tasks/{{ t.id }}">
+                <span class="notif-icon tone-danger">!</span>
+                <div class="notif-body"><h4 class="notif-title">{{ t.title }}</h4><p class="notif-meta">Срок был {{ t.due_date.strftime('%d.%m.%Y') }}{% if t.project %} · {{ t.project.name }}{% endif %}</p></div>
+                <span class="notif-link">Открыть →</span>
+            </a>
+        {% endfor %}
+    </section>
+    {% endif %}
+
+    {% if today_tasks %}
+    <section class="notif-section">
+        <div class="notif-section-head"><h2 class="notif-section-title">Сегодня</h2><span class="notif-section-count">{{ today_tasks|length }}</span></div>
+        {% for t in today_tasks %}
+            <a class="notif-card tone-warn" href="/tasks/{{ t.id }}">
+                <span class="notif-icon tone-warn">◎</span>
+                <div class="notif-body"><h4 class="notif-title">{{ t.title }}</h4><p class="notif-meta">Срок сегодня{% if t.project %} · {{ t.project.name }}{% endif %}</p></div>
+                <span class="notif-link">Открыть →</span>
+            </a>
+        {% endfor %}
+    </section>
+    {% endif %}
+
+    {% if soon_tasks %}
+    <section class="notif-section">
+        <div class="notif-section-head"><h2 class="notif-section-title">Скоро дедлайн</h2><span class="notif-section-count">{{ soon_tasks|length }}</span></div>
+        {% for t in soon_tasks %}
+            <a class="notif-card tone-info" href="/tasks/{{ t.id }}">
+                <span class="notif-icon tone-info">→</span>
+                <div class="notif-body"><h4 class="notif-title">{{ t.title }}</h4><p class="notif-meta">До {{ t.due_date.strftime('%d.%m.%Y') }}{% if t.project %} · {{ t.project.name }}{% endif %}</p></div>
+                <span class="notif-link">Открыть →</span>
+            </a>
+        {% endfor %}
+    </section>
+    {% endif %}
+
+    {% if assigned_tasks %}
+    <section class="notif-section">
+        <div class="notif-section-head"><h2 class="notif-section-title">Назначено мне</h2><span class="notif-section-count">{{ assigned_tasks|length }}</span></div>
+        {% for t in assigned_tasks %}
+            <a class="notif-card tone-success" href="/tasks/{{ t.id }}">
+                <span class="notif-icon tone-success">@</span>
+                <div class="notif-body"><h4 class="notif-title">{{ t.title }}</h4><p class="notif-meta">Назначил {{ t.owner.full_name or t.owner.username if t.owner else '—' }} · {{ t.created_at.strftime('%d.%m.%Y %H:%M') }}</p></div>
+                <span class="notif-link">Открыть →</span>
+            </a>
+        {% endfor %}
+    </section>
+    {% endif %}
+
+    {% if recent_comments %}
+    <section class="notif-section">
+        <div class="notif-section-head"><h2 class="notif-section-title">Новые комментарии</h2><span class="notif-section-count">{{ recent_comments|length }}</span></div>
+        {% for c in recent_comments %}
+            <a class="notif-card tone-muted" href="/tasks/{{ c.task.id }}">
+                <span class="notif-icon tone-muted">"</span>
+                <div class="notif-body"><h4 class="notif-title">{{ c.task.title }}</h4><p class="notif-meta">{{ c.author.full_name or c.author.username if c.author else '—' }}: «{{ c.text[:60] }}{% if c.text|length > 60 %}…{% endif %}» · {{ c.created_at.strftime('%d.%m.%Y %H:%M') }}</p></div>
+                <span class="notif-link">Открыть →</span>
+            </a>
+        {% endfor %}
+    </section>
+    {% endif %}
+
+    {% if not (overdue_tasks or today_tasks or soon_tasks or assigned_tasks or recent_comments) %}
+        <div class="card"><p class="muted">Уведомлений нет — всё под контролем.</p></div>
+    {% endif %}
+</section>
+{% endblock %}
