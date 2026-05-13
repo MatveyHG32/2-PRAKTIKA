@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Проекты — Планировщик задач{% endblock %}
+{% block content %}
+<section class="container">
+    <div class="page-head">
+        <div>
+            <h1>Проекты</h1>
+            <p class="muted">Группируй задачи по проектам — личные, учебные, рабочие.</p>
+        </div>
+        <button class="btn btn-primary" data-open-modal="new-project">+ Новый проект</button>
+    </div>
+
+    <div class="projects-grid">
+        {% for item in project_data %}
+            {% set p = item.project %}
+            {% set pct = (item.done / item.total * 100) | int if item.total else 0 %}
+            <article class="project-card">
+                <div class="project-head">
+                    <span class="project-dot" style="background: {{ p.color or '#6366F1' }};"></span>
+                    <h3 class="project-name">{{ p.name }}</h3>
+                </div>
+                {% if p.description %}<p class="project-desc">{{ p.description }}</p>{% endif %}
+                <div class="project-progress-head">
+                    <span class="project-progress-text">{{ item.done }} из {{ item.total }} выполнено</span>
+                    <span class="project-progress-pct">{{ pct }}%</span>
+                </div>
+                <div class="project-progress-bar">
+                    <div class="project-progress-fill" style="width: {{ pct }}%"></div>
+                </div>
+                {% if item.preview_tasks %}
+                    <ul class="project-tasks-list">
+                        {% for t in item.preview_tasks %}<li>{{ t.title }}</li>{% endfor %}
+                    </ul>
+                {% endif %}
+            </article>
+        {% else %}
+            <p class="muted">Пока нет проектов. Создай первый!</p>
+        {% endfor %}
+    </div>
+</section>
+
+<div class="modal" id="new-project" hidden>
+    <div class="modal-inner">
+        <div class="modal-head">
+            <h3 class="modal-title">Новый проект</h3>
+            <button class="modal-close" data-close-modal>×</button>
+        </div>
+        <form class="modal-body" action="/projects/new" method="post">
+            <div><label class="field-label">Название</label><input class="field-input" name="name" required></div>
+            <div><label class="field-label">Описание</label><textarea class="field-textarea" name="description"></textarea></div>
+            <div><label class="field-label">Цвет</label><input class="field-color" type="color" name="color" value="#6366F1"></div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-ghost" data-close-modal>Отмена</button>
+                <button type="submit" class="btn btn-primary">Создать</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
