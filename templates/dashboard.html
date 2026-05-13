@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}Мои задачи — Планировщик задач{% endblock %}
+{% block content %}
+<section class="container">
+    <div class="page-head">
+        <div>
+            <h1>Мои задачи</h1>
+            <p class="muted">Привет, {{ user.full_name or user.username }}! Сегодня {{ today.strftime('%d.%m.%Y') }}.</p>
+        </div>
+        <button class="btn btn-primary" data-open-modal="new-task">+ Новая задача</button>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-label">Всего задач</div>
+            <div class="stat-value">{{ stats.total }}</div>
+        </div>
+        <div class="stat-card stat-todo">
+            <div class="stat-label">К выполнению</div>
+            <div class="stat-value">{{ stats.todo }}</div>
+        </div>
+        <div class="stat-card stat-progress">
+            <div class="stat-label">В работе</div>
+            <div class="stat-value">{{ stats.in_progress }}</div>
+        </div>
+        <div class="stat-card stat-done">
+            <div class="stat-label">Выполнено</div>
+            <div class="stat-value">{{ stats.done }}</div>
+        </div>
+        <div class="stat-card stat-overdue">
+            <div class="stat-label">Просрочено</div>
+            <div class="stat-value">{{ stats.overdue }}</div>
+        </div>
+    </div>
+
+    <div class="board">
+        {% set columns = [('todo','К выполнению'),('in_progress','В работе'),('done','Выполнено')] %}
+        {% for col_key, col_label in columns %}
+            {% set col_tasks = tasks | selectattr('status.value','equalto', col_key) | list %}
+            <div class="board-col">
+                <div class="board-col-head">
+                    <span class="board-title">{{ col_label }}</span>
+                    <span class="board-count">{{ col_tasks|length }}</span>
+                </div>
+                <div class="board-list">
+                    {% for task in col_tasks %}
+                        <article class="task-card">
+                            <div class="task-card-head">
+                                {% if task.project %}<span class="task-project-pill">{{ task.project.name }}</span>{% else %}<span></span>{% endif %}
+                                <span class="task-priority {% if task.priority.value == 'high' %}prio-high{% elif task.priority.value == 'medium' %}prio-medium{% else %}prio-low{% endif %}">{% if task.priority.value == 'high' %}Высокий{% elif task.priority.value == 'medium' %}Средний{% else %}Низкий{% endif %}</span>
+                            </div>
+                            <h3 class="task-title"><a href="/tasks/{{ task.id }}">{{ task.title }}</a></h3>
+                            {% if task.description %}<p class="task-desc">{{ task.description[:120] }}{% if task.description|length > 120 %}…{% endif %}</p>{% endif %}
+                            <div class="task-meta">
+                                {% if task.due_date %}<span>📅 {{ task.due_date.strftime('%d.%m') }}</span>{% endif %}
+                                {% if task.assignee %}{% if task.due_date %}<span class="task-meta-sep"></span>{% endif %}<span>{{ task.assignee.username }}</span>{% endif %}
+                            </div>
+                            <form class="task-status-form" action="/tasks/{{ task.id }}/update" method="post">
+                                <input type="hidden" name="title" value="{{ task.title }}">
+                                <input type="hidden" name="description" value="{{ task.description or '' }}">
+                                <input type="hidden" name="priority" value="{{ task.priority.value }}">
+                                <input type="hidden" name="due_date" value="{{ task.due_date.isoformat() if task.due_date else '' }}">
+                                <input type="hidden" name="project_id" value="{{ task.project_id or '' }}">
+                                <input type="hidden" name="assignee_id" value="{{ task.assignee_id or '' }}">
+                                <select class="task-status-select" name="status" data-auto-submit>
+                                    <option value="todo" {% if task.status.value == 'todo' %}selected{% endif %}>К выполнению</option>
+                                    <option value="in_progress" {% if task.status.value == 'in_progress' %}selected{% endif %}>В работе</option>
+                                    <option value="done" {% if task.status.value == 'done' %}selected{% endif %}>Выполнено</option>
+                                </select>
+                            </form>
+                        </article>
+                    {% endfor %}
+                    {% if not col_tasks %}<p class="board-empty">Пока пусто</p>{% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</section>
+
+<div class="modal" id="new-task" hidden>
+    <div class="modal-inner">
+        <div class="modal-head">
+            <h3 class="modal-title">Новая задача</h3>
+            <button class="modal-close" data-close-modal>×</button>
+        </div>
+        <form class="modal-body" action="/tasks/create" method="post">
+            <div><label class="field-label">Название</label><input class="field-input" name="title" required></div>
+            <div><label class="field-label">Описание</label><textarea class="field-textarea" name="description"></textarea></div>
+            <div class="modal-grid-2">
+                <div><label class="field-label">Приоритет</label>
+                    <select class="field-select" name="priority">
+                        <option value="low">Низкий</option>
+                        <option value="medium" selected>Средний</option>
+                        <option value="high">Высокий</option>
+                    </select>
+                </div>
+                <div><label class="field-label">Срок</label><input class="field-input" type="date" name="due_date"></div>
+            </div>
+            <div><label class="field-label">Проект</label>
+                <select class="field-select" name="project_id">
+                    <option value="">— без проекта —</option>
+                    {% for p in projects %}<option value="{{ p.id }}">{{ p.name }}</option>{% endfor %}
+                </select>
+            </div>
+            <div><label class="field-label">Исполнитель</label>
+                <select class="field-select" name="assignee_id">
+                    <option value="">— назначить себе —</option>
+                    {% for u in users %}<option value="{{ u.id }}">{{ u.full_name or u.username }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-ghost" data-close-modal>Отмена</button>
+                <button type="submit" class="btn btn-primary">Создать задачу</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
