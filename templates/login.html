@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Вход — Планировщик задач{% endblock %}
+{% block content %}
+<div class="auth-shell">
+    <div class="auth-card">
+        <div class="auth-brand">
+            <span class="logo-mark">TP</span>
+            <h1>Планировщик задач</h1>
+            <p>Войдите, чтобы продолжить работу с задачами</p>
+        </div>
+        {% if error %}<div class="alert alert-error">{{ error }}</div>{% endif %}
+        <form method="post" action="/login" class="form">
+            <label class="field">
+                <span>Логин</span>
+                <input type="text" name="username" required autofocus>
+            </label>
+            <label class="field">
+                <span>Пароль</span>
+                <input type="password" name="password" required>
+            </label>
+            <button type="submit" class="btn btn-primary btn-block">Войти</button>
+        </form>
+        <p class="auth-foot">Нет аккаунта? <a href="/register">Зарегистрироваться</a></p>
+    </div>
+</div>
+{% endblock %}
