@@ -108,10 +108,10 @@ def build():
     add_centered(doc, "«Планировщик задач» — веб-приложение на FastAPI + SQLite", bold=True, size=12)
     for _ in range(5):
         doc.add_paragraph()
-    add_para(doc, "Студент:           Магасумов М. М.", size=12)
-    add_para(doc, "Группа:            ИСП(спо)-209-1", size=12)
+    add_para(doc, "Студент:           Магасумов М. И.", size=12)
+    add_para(doc, "Группа:            ИСП(спо)-209-2", size=12)
     add_para(doc, "Сроки практики:    08.06.2026 – 25.06.2026", size=12)
-    add_para(doc, "Руководитель:      преподаватель И. В. Мартыненко", size=12)
+    add_para(doc, "Руководитель:      канд. экон. наук, доц. Н. Ю. Азаренко", size=12)
     for _ in range(4):
         doc.add_paragraph()
     add_centered(doc, "Брянск 2026", size=12)
@@ -156,8 +156,8 @@ def build():
     set_cell_text(total_row[3], "", size=11)
 
     doc.add_paragraph()
-    add_para(doc, "Руководитель практики от вуза _______________ И. В. Мартыненко", size=12)
-    add_para(doc, "Студент _______________ Магасумов М. М.", size=12)
+    add_para(doc, "Руководитель практики от вуза _______________ Н. Ю. Азаренко", size=12)
+    add_para(doc, "Студент _______________ Магасумов М. И.", size=12)
     doc.add_paragraph()
     add_para(doc, "Дата заполнения: 25 июня 2026 г.", size=12)
 
